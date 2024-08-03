@@ -37,7 +37,10 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   static const platform = MethodChannel('samples.flutter.dev/battery');
+  static const platformNetstat =
+      MethodChannel('samples.flutter.dev/networkStats');
   String _batteryLevel = 'Unknown battery level.';
+  String _status = 'Unknown network status.';
 
   Future<void> _getBatteryLevel() async {
     String batteryLevel;
@@ -53,6 +56,20 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  Future<void> _getNetworkStats() async {
+    String status;
+    try {
+      final result = await platformNetstat.invokeMethod<int>('getNetworkStats');
+      status = 'Network data consumed: $result bytes.';
+    } on PlatformException catch (e) {
+      status = "Failed to get network stats: '${e.message}'.";
+    }
+
+    setState(() {
+      _status = status;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -65,6 +82,12 @@ class _MyHomePageState extends State<MyHomePage> {
               child: const Text('Get Battery Level'),
             ),
             Text(_batteryLevel),
+            SizedBox(width: 10),
+            ElevatedButton(
+              onPressed: _getNetworkStats,
+              child: const Text('Get Network stats'),
+            ),
+            Text(_status),
           ],
         ),
       ),
