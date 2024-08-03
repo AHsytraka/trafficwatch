@@ -1,5 +1,6 @@
-import 'package:english_words/english_words.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 void main() {
@@ -17,7 +18,7 @@ class MyApp extends StatelessWidget {
         title: 'Namer App',
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal.shade300),
         ),
         home: MyHomePage(),
       ),
@@ -25,21 +26,47 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyAppState extends ChangeNotifier {
-  var current = WordPair.random();
+class MyAppState extends ChangeNotifier {}
+
+// MYHOMEPAGE
+
+class MyHomePage extends StatefulWidget {
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class MyHomePage extends StatelessWidget {
+class _MyHomePageState extends State<MyHomePage> {
+  static const platform = MethodChannel('samples.flutter.dev/battery');
+  String _batteryLevel = 'Unknown battery level.';
+
+  Future<void> _getBatteryLevel() async {
+    String batteryLevel;
+    try {
+      final result = await platform.invokeMethod<int>('getBatteryLevel');
+      batteryLevel = 'Battery level at $result % .';
+    } on PlatformException catch (e) {
+      batteryLevel = "Failed to get battery level: '${e.message}'.";
+    }
+
+    setState(() {
+      _batteryLevel = batteryLevel;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-
-    return Scaffold(
-      body: Column(
-        children: [
-          Text('A random idea:'),
-          Text(appState.current.asLowerCase),
-        ],
+    return Material(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            ElevatedButton(
+              onPressed: _getBatteryLevel,
+              child: const Text('Get Battery Level'),
+            ),
+            Text(_batteryLevel),
+          ],
+        ),
       ),
     );
   }
